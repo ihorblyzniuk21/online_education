@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TokenEntity } from '@app/token/token.entity';
 import { DeleteResult, Repository } from 'typeorm';
 import { sign, verify } from 'jsonwebtoken';
-import { TokenDto } from '@app/token/dto/token.dto';
+import { GenerateTokenInterface } from '@app/token/types/generateToken.interface';
 
 @Injectable()
 export class TokenService {
@@ -13,7 +13,7 @@ export class TokenService {
   ) {}
 
   //TODO add .env
-  generateTokens(payload): TokenDto {
+  generateTokens(payload): GenerateTokenInterface {
     const accessToken = sign(payload, 'SECRET_A', {
       expiresIn: '30m',
     });
@@ -45,17 +45,17 @@ export class TokenService {
     }
   }
 
-  async saveToken(userId, refreshToken: string) {
+  async saveToken(user, refreshToken: string) {
     const tokenData = await this.tokenRepository.findOne({
-      where: { user: userId },
+      where: { user: user },
     });
+
     if (tokenData) {
-      Object.assign(tokenData, refreshToken);
+      Object.assign(tokenData, { refreshToken });
       return tokenData;
     }
     const newToken = new TokenEntity();
-    Object.assign(newToken, { refreshToken, user: userId });
-    console.log(newToken);
+    Object.assign(newToken, { refreshToken, user: user.id });
     return await this.tokenRepository.save(newToken);
   }
 

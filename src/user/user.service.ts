@@ -31,9 +31,11 @@ export class UserService {
 
     const newUser = new UserEntity();
     Object.assign(newUser, user);
-    const tokens = await this.tokenService.generateTokens(user);
-    await this.userRepository.save(newUser);
-    await this.tokenService.saveToken(newUser.id, tokens.refreshToken);
+
+    const savedUser = await this.userRepository.save(newUser);
+    delete savedUser.password;
+    const tokens = await this.tokenService.generateTokens({ ...savedUser });
+    await this.tokenService.saveToken({ ...savedUser }, tokens.refreshToken);
 
     delete newUser.password;
     return newUser;
