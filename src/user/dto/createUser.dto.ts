@@ -1,4 +1,5 @@
 import { IsEmail, IsNotEmpty } from 'class-validator';
+import { CreateRoleDto } from '@app/role/dto/createRole.dto';
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -6,6 +7,9 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   readonly lastName: string;
+
+  @IsNotEmpty()
+  readonly role: CreateRoleDto;
 
   @IsNotEmpty()
   @IsEmail()

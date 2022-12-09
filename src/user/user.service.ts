@@ -9,6 +9,7 @@ import { TokenEntity } from '@app/token/token.entity';
 import { GenerateTokenInterface } from '@app/token/types/generateToken.interface';
 import { UserResponseInterface } from '@app/user/types/userResponse.interface';
 import { LoginUserDto } from '@app/user/dto/loginUser.dto';
+import { RoleService } from '@app/role/role.service';
 
 @Injectable()
 export class UserService {
@@ -18,6 +19,7 @@ export class UserService {
     @InjectRepository(TokenEntity)
     private readonly tokenRepository: Repository<TokenEntity>,
     private readonly tokenService: TokenService,
+    private readonly roleService: RoleService,
   ) {}
 
   async registration(user: CreateUserDto): Promise<UserResponseInterface> {
@@ -32,6 +34,14 @@ export class UserService {
 
     const newUser = new UserEntity();
     Object.assign(newUser, user);
+
+    const roleFromDb = await this.roleService.getRoleByValue(user.role.value);
+
+    if (!roleFromDb) {
+      throw new HttpException('Role not found', HttpStatus.NOT_FOUND);
+    }
+
+    newUser.role = roleFromDb;
 
     const savedUser = await this.userRepository.save(newUser);
     delete savedUser.password;
@@ -64,7 +74,10 @@ export class UserService {
     return await this.tokenService.removeToken(refreshToken);
   }
 
-  async refresh(refreshToken: string): Promise<UserResponseInterface> {
+  async refresh(
+    refreshToken: string,
+    response,
+  ): Promise<UserResponseInterface> {
     if (!refreshToken) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
@@ -73,6 +86,7 @@ export class UserService {
     const tokenFromDB = await this.tokenService.findToken(refreshToken);
 
     if (!userData || !tokenFromDB) {
+      response.clearCookie('refreshToken');
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
 
@@ -101,6 +115,7 @@ export class UserService {
         'lastName',
         'dateOfBirth',
         'image',
+        'role',
         'password',
       ],
     });

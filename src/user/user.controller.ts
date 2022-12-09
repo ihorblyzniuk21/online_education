@@ -1,10 +1,20 @@
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { UserService } from '@app/user/user.service';
 import { CreateUserDto } from '@app/user/dto/createUser.dto';
 import { UserResponseInterface } from '@app/user/types/userResponse.interface';
 import { LoginUserDto } from '@app/user/dto/loginUser.dto';
 import { DeleteResult } from 'typeorm';
+import { AuthValidationPipe } from '@app/pipes/authValidation.pipe';
+import { AuthGuard } from '@app/user/guards/auth.guard';
 
 @Controller('user')
 export class UserController {
@@ -12,7 +22,7 @@ export class UserController {
 
   @Post('/registration')
   async registration(
-    @Body('user') createUserDto: CreateUserDto,
+    @Body('user', new AuthValidationPipe()) createUserDto: CreateUserDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<UserResponseInterface> {
     const res = await this.userService.registration(createUserDto);
@@ -25,7 +35,7 @@ export class UserController {
 
   @Post('/login')
   async login(
-    @Body('user') loginUserDto: LoginUserDto,
+    @Body('user', new AuthValidationPipe()) loginUserDto: LoginUserDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<UserResponseInterface> {
     const res = await this.userService.login(loginUserDto);
@@ -37,8 +47,13 @@ export class UserController {
   }
 
   @Post('/logout')
-  async logout(@Req() request: Request): Promise<DeleteResult> {
-    return await this.userService.logout(request.cookies.refreshToken);
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<DeleteResult> {
+    const res = await this.userService.logout(request.cookies.refreshToken);
+    response.clearCookie('refreshToken');
+    return res;
   }
 
   @Get('/refresh')
@@ -46,11 +61,20 @@ export class UserController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<UserResponseInterface> {
-    const res = await this.userService.refresh(request.cookies.refreshToken);
+    const res = await this.userService.refresh(
+      request.cookies.refreshToken,
+      response,
+    );
     response.cookie('refreshToken', res.tokens.refreshToken, {
       maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
     });
     return res;
+  }
+
+  @Post('/test')
+  @UseGuards(AuthGuard)
+  async updateUser() {
+    return 'Working';
   }
 }
