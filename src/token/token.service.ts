@@ -12,12 +12,12 @@ export class TokenService {
     private readonly tokenRepository: Repository<TokenEntity>,
   ) {}
 
-  //TODO add .env
+  //TODO add .development.env
   generateTokens(payload): GenerateTokenInterface {
-    const accessToken = sign(payload, 'SECRET_A', {
+    const accessToken = sign(payload, process.env.JWT_ACCESS_SECRET, {
       expiresIn: '30m',
     });
-    const refreshToken = sign(payload, 'SECRET_R', {
+    const refreshToken = sign(payload, process.env.JWT_REFRESF_SECRET, {
       expiresIn: '10d',
     });
 

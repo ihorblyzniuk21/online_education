@@ -8,7 +8,12 @@ import { UserModule } from './user/user.module';
 import { TokenModule } from './token/token.module';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(ormconfig), UserModule, TokenModule],
+  imports: [
+    TypeOrmModule.forRoot(ormconfig),
+    ConfigModule.forRoot({ envFilePath: '.development.env' }),
+    UserModule,
+    TokenModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
