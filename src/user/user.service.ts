@@ -64,6 +64,27 @@ export class UserService {
     return await this.tokenService.removeToken(refreshToken);
   }
 
+  async refresh(refreshToken: string): Promise<UserResponseInterface> {
+    if (!refreshToken) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+
+    const userData = this.tokenService.validateRefreshToken(refreshToken);
+    const tokenFromDB = await this.tokenService.findToken(refreshToken);
+
+    if (!userData || !tokenFromDB) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+
+    const userByEmail = await this.getUserByEmail(userData);
+
+    delete userByEmail.password;
+    const tokens = await this.tokenService.generateTokens({ ...userByEmail });
+    await this.tokenService.saveToken({ ...userByEmail }, tokens.refreshToken);
+
+    return this.buildUserResponse(userByEmail, tokens);
+  }
+
   async getUserByEmail(user) {
     if (!user) {
       throw new HttpException(

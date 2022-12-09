@@ -17,7 +17,7 @@ export class TokenService {
     const accessToken = sign(payload, process.env.JWT_ACCESS_SECRET, {
       expiresIn: '30m',
     });
-    const refreshToken = sign(payload, process.env.JWT_REFRESF_SECRET, {
+    const refreshToken = sign(payload, process.env.JWT_REFRESH_SECRET, {
       expiresIn: '10d',
     });
 
@@ -52,7 +52,7 @@ export class TokenService {
 
     if (tokenData) {
       Object.assign(tokenData, { refreshToken });
-      return tokenData;
+      return await this.tokenRepository.save(tokenData);
     }
     const newToken = new TokenEntity();
     Object.assign(newToken, { refreshToken, user: user.id });

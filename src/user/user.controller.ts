@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { UserService } from '@app/user/user.service';
 import { CreateUserDto } from '@app/user/dto/createUser.dto';
@@ -16,7 +16,10 @@ export class UserController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<UserResponseInterface> {
     const res = await this.userService.registration(createUserDto);
-    response.cookie('refreshToken', res.tokens.refreshToken);
+    response.cookie('refreshToken', res.tokens.refreshToken, {
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+    });
     return res;
   }
 
@@ -26,12 +29,28 @@ export class UserController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<UserResponseInterface> {
     const res = await this.userService.login(loginUserDto);
-    response.cookie('refreshToken', res.tokens.refreshToken);
+    response.cookie('refreshToken', res.tokens.refreshToken, {
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+    });
     return res;
   }
 
   @Post('/logout')
   async logout(@Req() request: Request): Promise<DeleteResult> {
     return await this.userService.logout(request.cookies.refreshToken);
+  }
+
+  @Get('/refresh')
+  async refresh(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<UserResponseInterface> {
+    const res = await this.userService.refresh(request.cookies.refreshToken);
+    response.cookie('refreshToken', res.tokens.refreshToken, {
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+    });
+    return res;
   }
 }
