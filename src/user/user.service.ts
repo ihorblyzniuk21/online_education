@@ -123,6 +123,7 @@ export class UserService {
         'image',
         'roles',
         'password',
+        'school',
       ],
       relations: ['roles'],
     });

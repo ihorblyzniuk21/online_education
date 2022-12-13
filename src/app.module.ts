@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { TokenModule } from './token/token.module';
 import { AuthMiddleware } from '@app/user/middlewares/auth.middleware';
 import { RoleModule } from './role/role.module';
+import { SchoolModule } from './school/school.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { RoleModule } from './role/role.module';
     UserModule,
     TokenModule,
     RoleModule,
+    SchoolModule,
   ],
   controllers: [AppController],
   providers: [AppService],

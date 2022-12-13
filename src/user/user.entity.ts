@@ -4,10 +4,12 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { hash } from 'bcrypt';
 import { RoleEntity } from '@app/role/role.entity';
+import { SchoolEntity } from '@app/school/school.entity';
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -46,4 +48,7 @@ export class UserEntity {
   @ManyToMany(() => RoleEntity, (role) => role.users, { cascade: true })
   @JoinTable()
   roles: RoleEntity[];
+
+  @ManyToOne(() => SchoolEntity, (school) => school.users, { eager: true })
+  school: SchoolEntity;
 }
