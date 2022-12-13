@@ -12,7 +12,10 @@ export class RoleService {
   ) {}
 
   async getRoleByValue(value: string): Promise<RoleEntity> {
-    return await this.roleRepository.findOne({ where: { value } });
+    return await this.roleRepository.findOne({
+      where: { value },
+      relations: ['users'],
+    });
   }
 
   async createRole(role: CreateRoleDto): Promise<RoleEntity> {

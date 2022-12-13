@@ -2,7 +2,8 @@ import {
   BeforeInsert,
   Column,
   Entity,
-  ManyToOne,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { hash } from 'bcrypt';
@@ -42,6 +43,7 @@ export class UserEntity {
     this.password = await hash(this.password, 5);
   }
 
-  @ManyToOne(() => RoleEntity, (role) => role.users, { eager: true })
-  role: RoleEntity;
+  @ManyToMany(() => RoleEntity, (role) => role.users, { cascade: true })
+  @JoinTable()
+  roles: RoleEntity[];
 }

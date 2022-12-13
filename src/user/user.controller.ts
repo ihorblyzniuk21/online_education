@@ -15,6 +15,9 @@ import { LoginUserDto } from '@app/user/dto/loginUser.dto';
 import { DeleteResult } from 'typeorm';
 import { AuthValidationPipe } from '@app/pipes/authValidation.pipe';
 import { AuthGuard } from '@app/user/guards/auth.guard';
+import { Roles } from '@app/user/decorators/role-auth.decorator';
+import { roles } from '@app/helpers/constants';
+import { RolesGuard } from '@app/user/guards/role.guard';
 
 @Controller('user')
 export class UserController {
@@ -73,7 +76,9 @@ export class UserController {
   }
 
   @Post('/test')
+  @Roles(roles.TEACHER)
   @UseGuards(AuthGuard)
+  @UseGuards(RolesGuard)
   async updateUser() {
     return 'Working';
   }

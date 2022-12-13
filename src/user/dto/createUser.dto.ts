@@ -9,7 +9,7 @@ export class CreateUserDto {
   readonly lastName: string;
 
   @IsNotEmpty()
-  readonly role: CreateRoleDto;
+  readonly roles: CreateRoleDto[];
 
   @IsNotEmpty()
   @IsEmail()

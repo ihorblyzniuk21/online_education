@@ -10,6 +10,7 @@ import { GenerateTokenInterface } from '@app/token/types/generateToken.interface
 import { UserResponseInterface } from '@app/user/types/userResponse.interface';
 import { LoginUserDto } from '@app/user/dto/loginUser.dto';
 import { RoleService } from '@app/role/role.service';
+import { RoleEntity } from '@app/role/role.entity';
 
 @Injectable()
 export class UserService {
@@ -18,6 +19,8 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(TokenEntity)
     private readonly tokenRepository: Repository<TokenEntity>,
+    @InjectRepository(RoleEntity)
+    private readonly roleRepository: Repository<RoleEntity>,
     private readonly tokenService: TokenService,
     private readonly roleService: RoleService,
   ) {}
@@ -35,15 +38,18 @@ export class UserService {
     const newUser = new UserEntity();
     Object.assign(newUser, user);
 
-    const roleFromDb = await this.roleService.getRoleByValue(user.role.value);
+    const roles = [];
+    user.roles.map(async (role) => {
+      const roleFromDB = await this.roleService.getRoleByValue(role.value);
+      if (!roleFromDB) {
+        throw new HttpException('Role not found', HttpStatus.NOT_FOUND);
+      }
+      roles.push(roleFromDB);
+    });
 
-    if (!roleFromDb) {
-      throw new HttpException('Role not found', HttpStatus.NOT_FOUND);
-    }
-
-    newUser.role = roleFromDb;
-
+    newUser.roles = [...newUser.roles, ...roles];
     const savedUser = await this.userRepository.save(newUser);
+    await this.roleRepository.save(roles);
     delete savedUser.password;
     const tokens = await this.tokenService.generateTokens({ ...savedUser });
     await this.tokenService.saveToken({ ...savedUser }, tokens.refreshToken);
@@ -115,9 +121,10 @@ export class UserService {
         'lastName',
         'dateOfBirth',
         'image',
-        'role',
+        'roles',
         'password',
       ],
+      relations: ['roles'],
     });
   }
 
